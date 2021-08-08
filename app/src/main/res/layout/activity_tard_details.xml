@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".TardDetailsActivity"
+    android:background="@drawable/ic_back"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+
+    <ImageView
+        android:layout_width="@dimen/_60sdp"
+        android:layout_height="@dimen/_60sdp"
+        android:src="@drawable/logo"
+        android:layout_marginStart="@dimen/_5sdp"
+        tools:ignore="RtlCompat"
+        android:layout_marginTop="@dimen/_30sdp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="تفاصيل الطرد:"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginEnd="@dimen/_15sdp"
+        android:fontFamily="@font/swissra_condensed_bold"
+        android:textColor="@color/black"
+        android:textSize="@dimen/_18ssp"
+        />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="مالذي يوجد داخل هذا الطرد؟"
+        android:layout_marginTop="@dimen/_20sdp"
+        android:layout_marginEnd="@dimen/_15sdp"
+        android:fontFamily="@font/swissra_condensed_bold"
+        android:textColor="@color/black"
+        android:textSize="@dimen/_15ssp"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_100sdp"
+        android:background="@drawable/edit_text_back"
+        android:layout_margin="@dimen/_15sdp">
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/tardDetails"
+            android:gravity="end"
+            android:layout_margin="@dimen/_12sdp"
+            android:background="@android:color/transparent"
+            android:textColor="@color/black"
+            android:textColorHint="@color/black"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/_15ssp"
+            android:fontFamily="@font/swissra_condensed_bold"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ارفاق صورة الطرد"
+        android:layout_marginTop="@dimen/_1sdp"
+        android:layout_marginEnd="@dimen/_15sdp"
+        android:fontFamily="@font/swissra_condensed_bold"
+        android:textColor="@color/black"
+        android:textSize="@dimen/_15ssp"
+        />
+
+    <ImageButton
+        android:id="@+id/tardImage"
+        android:layout_marginTop="@dimen/_15sdp"
+        android:layout_width="@dimen/_100sdp"
+        android:layout_height="@dimen/_80sdp"
+        android:paddingStart="@dimen/_20sdp"
+        android:paddingBottom="@dimen/_10sdp"
+        android:paddingEnd="@dimen/_20sdp"
+        android:paddingTop="@dimen/_10sdp"
+        android:background="@color/purple_500"
+        android:scaleType="fitXY"
+        android:src="@drawable/ic_license"
+        android:layout_alignParentEnd="true"/>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_25sdp"
+        app:cardBackgroundColor="@color/purple_500"
+        app:cardCornerRadius="@dimen/_12sdp">
+
+        <Button
+            android:id="@+id/sendRequest"
+            android:background="@android:color/transparent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ارسال الطلب"
+            android:textColor="@color/black"
+            android:fontFamily="@font/swissra_condensed_bold"
+            />
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>
