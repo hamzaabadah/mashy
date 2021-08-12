@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -24,9 +25,11 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.mashy.mashy.api.MySingleton;
+import com.mashy.mashy.api.POSTMediasTask;
 import com.mashy.mashy.api.URL;
 import com.mashy.mashy.util.Utility;
 
+//import org.apache.http.entity.mime.content.FileBody;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,6 +39,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +54,7 @@ public class TardDetailsActivity extends AppCompatActivity {
     String sessionId;
     Button sendRequest;
     Bitmap bitmap;
+    File file;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,18 +68,13 @@ public class TardDetailsActivity extends AppCompatActivity {
         });
 
         sendRequest.setOnClickListener(v->{
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImageUri);
-                convertToPNG(bitmap);
-                Log.i(TAG, convertToPNG(bitmap).toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (Utility.isOnline(this)){
-                shipmentAdd(URL.ADD_TARD, "DDDDD");
-            }else {
-                Toast.makeText(this, "تأكد من اتصال الانترنت", Toast.LENGTH_SHORT).show();
-            }
+            POSTMediasTask postMediasTask = new POSTMediasTask();
+            postMediasTask.uploadMedia(this, file.getPath());
+//            if (Utility.isOnline(this)){
+//                shipmentAdd(URL.ADD_TARD, "DDDDD");
+//            }else {
+//                Toast.makeText(this, "تأكد من اتصال الانترنت", Toast.LENGTH_SHORT).show();
+//            }
         });
     }
 
@@ -91,12 +91,13 @@ public class TardDetailsActivity extends AppCompatActivity {
         try {
             postData.put("details", details);
             postData.put("distance", 2);
-            try {
-                postData.put("image", convertToPNG(bitmap));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//
+//            postData.put("image", new VolleyMultipartRequest.DataPart( "index.png", getFileDataFromDrawable(bitmap))
+//            );
+            //postData.put("image", new DataPart("file_avatar.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), mAvatarImage.getDrawable()), "image/jpeg"));
+            postData.accumulate("image", file);
             postData.put("type", sessionId);
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -112,6 +113,8 @@ public class TardDetailsActivity extends AppCompatActivity {
                                     progressDialog.dismiss();
                                 }else {
                                     progressDialog.dismiss();
+                                    Log.i(TAG, "Response: " + response.toString());
+                                    Log.i(TAG, postData.toString());
                                     Toast.makeText(this, "فشل ارسال الطرد1" , Toast.LENGTH_SHORT).show();
                                 }
                             } catch (JSONException e) {
@@ -154,13 +157,8 @@ public class TardDetailsActivity extends AppCompatActivity {
             if (requestCode == SELECT_PICTURE) {
                 // Get the url of the image from data
                 selectedImageUri = data.getData();
-                try {
-                    bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImageUri);
-                    convertToPNG(bitmap);
-                    Log.i(TAG, convertToPNG(bitmap).toString());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                file = copyFileToInternalStorage(selectedImageUri,"image");
+                Log.i(TAG, file.toString());
                 if (null != selectedImageUri) {
                     // update the preview image in the layout
                     tardImage.setImageURI(selectedImageUri);
@@ -170,27 +168,59 @@ public class TardDetailsActivity extends AppCompatActivity {
         }
     }
 
-    public static Bitmap convertToPNG(Bitmap image) throws IOException {
+    private File copyFileToInternalStorage(Uri uri,String newDirName) {
+        Uri returnUri = uri;
 
-        File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
-        File imageFile = File.createTempFile(
-                "imageFileName",  /* prefix */
-                ".png",         /* suffix */
-                storageDir      /* directory */
-        );
+        Cursor returnCursor = this.getContentResolver().query(returnUri, new String[]{
+                OpenableColumns.DISPLAY_NAME,OpenableColumns.SIZE
+        }, null, null, null);
 
-        FileOutputStream outStream = null;
-        try {
-            outStream = new FileOutputStream(imageFile);
-            image.compress(Bitmap.CompressFormat.PNG, 100, outStream);
-            outStream.flush();
-            outStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        /*
+         * Get the column indexes of the data in the Cursor,
+         *     * move to the first row in the Cursor, get the data,
+         *     * and display it.
+         * */
+        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+        int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+        returnCursor.moveToFirst();
+        String name = (returnCursor.getString(nameIndex));
+        String size = (Long.toString(returnCursor.getLong(sizeIndex)));
+
+        File output;
+        if(!newDirName.equals("")) {
+            File dir = new File(this.getFilesDir() + "/" + newDirName);
+            if (!dir.exists()) {
+                dir.mkdir();
+            }
+            output = new File(this.getFilesDir() + "/" + newDirName + "/" + name);
         }
-        return BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+        else{
+            output = new File(this.getFilesDir() + "/" + name);
+        }
+        try {
+            InputStream inputStream = this.getContentResolver().openInputStream(uri);
+            FileOutputStream outputStream = new FileOutputStream(output);
+            int read = 0;
+            int bufferSize = 1024;
+            final byte[] buffers = new byte[bufferSize];
+            while ((read = inputStream.read(buffers)) != -1) {
+                outputStream.write(buffers, 0, read);
+            }
+
+            inputStream.close();
+            outputStream.close();
+
+        }
+        catch (Exception e) {
+
+            Log.e("Exception", e.getMessage());
+        }
+
+        return new File(output.getPath());
     }
+
+
 
 
 }

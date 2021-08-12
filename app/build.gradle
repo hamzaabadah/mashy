@@ -47,4 +47,8 @@ dependencies {
 
     implementation 'androidx.multidex:multidex:2.0.1'
 
+    implementation 'dev.dworks.libs:volleyplus:+'
+    //noinspection DuplicatePlatformClasses,DuplicatePlatformClasses
+    //implementation 'com.mcxiaoke.volley:library:1.0.19'
+
 }
