@@ -5,18 +5,15 @@ import androidx.appcompat.widget.AppCompatEditText;
 //import org.junit.Assert;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -24,25 +21,28 @@ import android.widget.Toast;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.google.android.material.snackbar.Snackbar;
 import com.mashy.mashy.api.MySingleton;
-import com.mashy.mashy.api.POSTMediasTask;
-import com.mashy.mashy.api.URL;
 import com.mashy.mashy.util.Utility;
 
 //import org.apache.http.entity.mime.content.FileBody;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class TardDetailsActivity extends AppCompatActivity {
 
@@ -55,12 +55,16 @@ public class TardDetailsActivity extends AppCompatActivity {
     Button sendRequest;
     Bitmap bitmap;
     File file;
-
+    View contextView ;
+    String token;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tard_details);
         init();
+
+
+
 
         Log.i(TAG, sessionId);
         tardImage.setOnClickListener(v->{
@@ -68,14 +72,67 @@ public class TardDetailsActivity extends AppCompatActivity {
         });
 
         sendRequest.setOnClickListener(v->{
-            POSTMediasTask postMediasTask = new POSTMediasTask();
-            postMediasTask.uploadMedia(this, file.getPath());
-//            if (Utility.isOnline(this)){
-//                shipmentAdd(URL.ADD_TARD, "DDDDD");
-//            }else {
-//                Toast.makeText(this, "تأكد من اتصال الانترنت", Toast.LENGTH_SHORT).show();
-//            }
+            if (Utility.isOnline(this)){
+               checkData();
+            }else {
+                Toast.makeText(this, "تأكد من اتصال الانترنت", Toast.LENGTH_SHORT).show();
+            }
         });
+    }
+
+    private void checkData(){
+        String details = Objects.requireNonNull(tardDetails.getText()).toString();
+        if (details.isEmpty()){
+            Snackbar.make(contextView, "بالرجاء ادخال تفاصيل الطرد", Snackbar.LENGTH_SHORT)
+                    .show();
+        }else if (Uri.EMPTY.equals(selectedImageUri)){
+            Snackbar.make(contextView, "بالرجاء اختيار صورة للطرد", Snackbar.LENGTH_SHORT)
+                    .show();
+        }else {
+            addTard(details, sessionId, token);
+        }
+    }
+    private void addTard(String details, String type, String token){
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("جاري ارسال الطرد...");
+
+
+        ApiConfig apiConfig=AppConfig.getRetrofit().create(ApiConfig.class);
+        MediaType mediaType =MediaType.parse("multipart/from-data");
+        RequestBody requestBodyDetails= RequestBody.create(mediaType,details);
+        RequestBody requestBodyDistance= RequestBody.create(mediaType,"2");
+        RequestBody requestBodyType= RequestBody.create(mediaType,type);
+        //convirt file to MultipartBody.Part
+        RequestBody requestBodyFile= RequestBody.create(mediaType,file);
+        MultipartBody.Part filePart =
+                MultipartBody.Part.createFormData("image",file.getName(),requestBodyFile);
+        progressDialog.show();
+        apiConfig.uploadFile( filePart,requestBodyDetails,requestBodyDistance,requestBodyType, token)
+                .enqueue(new Callback<com.mashy.mashy.Request>() {
+                    @Override
+                    public void onResponse(Call<com.mashy.mashy.Request> call,
+                                           Response<com.mashy.mashy.Request> response) {
+                        Log.d(TAG, "onResponse: "+ response.body().toString());
+                        if (response.body().success){
+                            progressDialog.dismiss();
+                            Toast.makeText(TardDetailsActivity.this, "تم ارسال الطرد بنجاح" , Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "onResponse: "+ response.body().toString());
+                            tardDetails.setText("");
+                            tardImage.setImageDrawable(null);
+                        }else {
+                            progressDialog.dismiss();
+                            Toast.makeText(TardDetailsActivity.this, "فشل ارسال الطرد1" , Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "onResponse: "+ response.body().toString());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<com.mashy.mashy.Request> call, Throwable t) {
+                        Log.d(TAG, "onResponse: "+t.getMessage());
+                        Toast.makeText(TardDetailsActivity.this, "فشل ارسال الطرد2" , Toast.LENGTH_SHORT).show();
+                        progressDialog.dismiss();
+                    }
+                });
     }
 
     private void init(){
@@ -83,6 +140,9 @@ public class TardDetailsActivity extends AppCompatActivity {
         tardDetails = findViewById(R.id.tardDetails);
         tardImage = findViewById(R.id.tardImage);
         sendRequest = findViewById(R.id.sendRequest);
+        contextView = findViewById(android.R.id.content);
+        SharedPreferences preferences = getSharedPreferences("myprefs", MODE_PRIVATE);
+        token = preferences.getString("access_token", "");
     }
 
     private void shipmentAdd(String url, String details){
@@ -101,30 +161,22 @@ public class TardDetailsActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("جاري ارسال الطرد...");
-        progressDialog.show();
+
         JsonObjectRequest jsonObjectRequest =
                 new JsonObjectRequest(Request.Method.POST, url, postData,
                         response ->{
                             try {
                                 if(response.getBoolean("success")){
                                     Log.i(TAG, "Response: " + response.toString());
-                                    progressDialog.dismiss();
                                 }else {
-                                    progressDialog.dismiss();
                                     Log.i(TAG, "Response: " + response.toString());
                                     Log.i(TAG, postData.toString());
-                                    Toast.makeText(this, "فشل ارسال الطرد1" , Toast.LENGTH_SHORT).show();
                                 }
                             } catch (JSONException e) {
-                                progressDialog.dismiss();
                                 e.printStackTrace();
                             }
                         },
                         error -> {
-                            progressDialog.dismiss();
-                            Toast.makeText(this, "فشل ارسال الطرد2" , Toast.LENGTH_SHORT).show();
                             Log.i(TAG, "Error: " + error.toString());
                             // TODO: Handle error
                         }
