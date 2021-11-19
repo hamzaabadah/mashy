@@ -28,6 +28,7 @@
         android:textColor="@color/black"
         android:textSize="@dimen/_18ssp"
         />
+
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -91,18 +92,45 @@
                 android:layout_alignParentLeft="true" />
 
             <TextView
-                android:layout_centerInParent="true"
-                android:layout_alignParentEnd="true"
-                android:layout_weight="1"
-                android:text="ماشي طرود"
-                android:textColor="@color/black"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:ignore="RtlCompat"
+                android:layout_alignParentEnd="true"
+                android:layout_centerInParent="true"
+                android:layout_weight="1"
+                android:fontFamily="@font/swissra_condensed_bold"
+                android:text="ماشي طرود"
+                android:textColor="@color/black"
                 android:textSize="@dimen/_15ssp"
-                android:fontFamily="@font/swissra_condensed_bold"/>
+                tools:ignore="RtlCompat" />
 
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
 
+    <androidx.cardview.widget.CardView
+        android:id="@+id/myOrders"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_30sdp"
+        android:layout_marginEnd="@dimen/_80sdp"
+        android:layout_marginStart="@dimen/_80sdp"
+        app:cardBackgroundColor="@color/purple_500"
+
+        app:cardCornerRadius="@dimen/_10sdp">
+
+        <TextView
+            android:layout_centerInParent="true"
+            android:layout_alignParentEnd="true"
+            android:layout_weight="1"
+            android:text="طلباتي"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:ignore="RtlCompat"
+            android:textSize="@dimen/_15ssp"
+            android:padding="@dimen/_10sdp"
+            android:fontFamily="@font/swissra_condensed_bold"/>
+
+
+    </androidx.cardview.widget.CardView>
 </LinearLayout>

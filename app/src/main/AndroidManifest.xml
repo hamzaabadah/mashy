@@ -14,10 +14,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
         android:theme="@style/Theme.Mashy">
-        <activity android:name=".TardDetailsActivity"></activity>
+        <activity
+            android:name=".MyOrdersActivity"
+            android:exported="true" />
+        <activity android:name=".TardDetailsActivity" />
         <activity android:name=".TardActivity" />
-        <activity android:name=".LoginActivity"
-            android:windowSoftInputMode="stateHidden|adjustResize"/>
+        <activity
+            android:name=".LoginActivity"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
         <activity android:name=".WelcomeActivity" />
         <activity
             android:name=".ClientRegisterActivity"

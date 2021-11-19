@@ -4,7 +4,12 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout/activity_captain_register.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_login.xml" value="0.2056159420289855" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.2056159420289855" />
+        <entry key="app/src/main/res/layout/activity_my_orders.xml" value="0.2056159420289855" />
+        <entry key="app/src/main/res/layout/activity_tard.xml" value="0.2056159420289855" />
         <entry key="app/src/main/res/layout/activity_tard_details.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/order_item.xml" value="0.2056159420289855" />
       </map>
     </option>
   </component>
